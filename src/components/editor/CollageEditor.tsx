@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { TemplatePreview } from "@/components/TemplatePreview";
 import { getCategoryHref, getFontFamily, getInitialTexts } from "@/data/templates";
 import type { CollageTemplate, CollageText } from "@/types/collage";
+import { downloadBlob, exportCollage } from "./exportCollage";
 import { PhotoModal } from "./PhotoModal";
 import { TextModal } from "./TextModal";
 import { useObjectUrls } from "./useObjectUrls";
@@ -22,6 +23,9 @@ export function CollageEditor({ template }: { template: CollageTemplate }) {
   const [photos, setPhotos] = useState<Record<number, string>>({});
   const [texts, setTexts] = useState(() => getInitialTexts(template));
   const [selection, setSelection] = useState<Selection>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const collageRef = useRef<HTMLDivElement>(null);
 
   const selectedText =
     selection?.kind === "text" ? texts.find((t) => t.id === selection.id) : undefined;
@@ -43,6 +47,19 @@ export function CollageEditor({ template }: { template: CollageTemplate }) {
     setSelection(null);
   }
 
+  async function handleDownload() {
+    if (!collageRef.current) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      downloadBlob(await exportCollage(collageRef.current), `${template.id}.png`);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "Не удалось экспортировать коллаж.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col bg-neutral-50">
       <header className="flex items-center gap-4 border-b border-neutral-200 bg-white px-4 py-4 md:px-10">
@@ -53,13 +70,26 @@ export function CollageEditor({ template }: { template: CollageTemplate }) {
           ← Каталог
         </Link>
         <h1 className="text-lg font-semibold tracking-tight text-neutral-900">{template.title}</h1>
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={exporting}
+          className="ml-auto rounded-lg bg-neutral-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-40"
+        >
+          {exporting ? "Exporting…" : "Download"}
+        </button>
       </header>
 
       <main className="flex-1 px-4 py-6 md:px-10 md:py-10">
         <p className="mb-4 text-sm text-neutral-500">
           Нажмите на фото, чтобы заменить его, или на текст, чтобы отредактировать.
         </p>
-        <div className="relative mx-auto max-w-3xl overflow-hidden rounded-xl border border-neutral-200 shadow-sm">
+        {exportError && (
+          <p role="alert" className="mx-auto mb-4 max-w-3xl rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+            {exportError}
+          </p>
+        )}
+        <div ref={collageRef} className="relative mx-auto max-w-3xl overflow-hidden rounded-xl border border-neutral-200 shadow-sm">
           <TemplatePreview
             template={template}
             renderCell={(index) => (
@@ -84,6 +114,7 @@ export function CollageEditor({ template }: { template: CollageTemplate }) {
             <button
               key={t.id}
               type="button"
+              data-text
               onClick={() => setSelection({ kind: "text", id: t.id })}
               className={`absolute ${textPositions[t.position]} max-w-[80%] truncate rounded-md bg-white/85 px-3 py-1.5 text-left text-lg shadow-sm hover:ring-2 hover:ring-neutral-900`}
               style={{ fontFamily: getFontFamily(t.fontId), color: t.color }}

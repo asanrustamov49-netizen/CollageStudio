@@ -21,6 +21,7 @@ export function TemplatePreview({ template, renderCell }: TemplatePreviewProps) 
       {layout.cells.map((area, i) => (
         <div
           key={area}
+          data-cell
           className={`relative overflow-hidden rounded-md ${palette[i % palette.length]}`}
           style={{ gridArea: area }}
         >
