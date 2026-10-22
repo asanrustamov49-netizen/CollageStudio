@@ -8,8 +8,8 @@ import { getCategoryHref, getFontFamily, getInitialTexts } from "@/data/template
 import type { CollageTemplate, CollageText } from "@/types/collage";
 import { downloadBlob, exportCollage } from "./exportCollage";
 import { PhotoModal } from "./PhotoModal";
+import { setDraftPhoto, setDraftTexts, useCollageDraft } from "@/store/collageDrafts";
 import { TextModal } from "./TextModal";
-import { useObjectUrls } from "./useObjectUrls";
 
 type Selection = { kind: "photo"; index: number } | { kind: "text"; id: string } | null;
 
@@ -19,9 +19,11 @@ const textPositions: Record<CollageText["position"], string> = {
 };
 
 export function CollageEditor({ template }: { template: CollageTemplate }) {
-  const photoUrls = useObjectUrls();
-  const [photos, setPhotos] = useState<Record<number, string>>({});
-  const [texts, setTexts] = useState(() => getInitialTexts(template));
+  const draft = useCollageDraft(template.id);
+  const [initialTexts] = useState(() => getInitialTexts(template));
+  const photos = draft?.photos ?? {};
+  const texts = draft?.texts ?? initialTexts;
+  const setTexts = (next: CollageText[]) => setDraftTexts(template.id, next);
   const [selection, setSelection] = useState<Selection>(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -31,9 +33,7 @@ export function CollageEditor({ template }: { template: CollageTemplate }) {
     selection?.kind === "text" ? texts.find((t) => t.id === selection.id) : undefined;
 
   function savePhoto(index: number, file: File) {
-    const previous = photos[index];
-    if (previous) photoUrls.revoke(previous);
-    setPhotos({ ...photos, [index]: photoUrls.create(file) });
+    setDraftPhoto(template.id, index, file);
     setSelection(null);
   }
 
