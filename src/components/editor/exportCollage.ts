@@ -1,8 +1,9 @@
-const OUTPUT_WIDTH = 1600;
+const OUTPUT_WIDTH = 2400;
 
 /**
  * Рисует коллаж в PNG по раскладке DOM-элементов внутри `root`:
- * ячейки помечены `data-cell`, тексты — `data-text`.
+ * ячейки помечены `data-cell`, фото — `data-photo` с исходным файлом
+ * и кадром в `data-src`/`data-x`/`data-y`/`data-zoom`, тексты — `data-text`.
  */
 export async function exportCollage(root: HTMLElement): Promise<Blob> {
   await document.fonts.ready;
@@ -20,8 +21,9 @@ export async function exportCollage(root: HTMLElement): Promise<Blob> {
   canvas.height = Math.round(root.clientHeight * scale);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Браузер не поддерживает Canvas 2D.");
+  ctx.imageSmoothingQuality = "high";
 
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = getComputedStyle(root).backgroundColor || "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const box = (el: Element) => {
@@ -45,21 +47,27 @@ export async function exportCollage(root: HTMLElement): Promise<Blob> {
     ctx.fillStyle = style.backgroundColor;
     ctx.fillRect(x, y, w, h);
 
-    const img = cell.querySelector("img");
-    if (img) {
-      if (!(await isImageReady(img))) {
+    const photo = cell.querySelector<HTMLImageElement>("img[data-photo]");
+    if (photo) {
+      const img = await loadImage(photo.dataset.src ?? photo.currentSrc);
+      if (!img) {
         throw new Error(`Не удалось загрузить фото ${i + 1}. Замените его другим изображением.`);
       }
-      // Аналог object-fit: cover.
-      const ratio = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+      // Аналог object-fit: cover + object-position и scale(zoom) с transform-origin в той же точке.
+      const px = Number(photo.dataset.x ?? 50) / 100;
+      const py = Number(photo.dataset.y ?? 50) / 100;
+      const zoom = Number(photo.dataset.zoom ?? 1);
+      const ratio = Math.max(w / img.naturalWidth, h / img.naturalHeight) * zoom;
       const dw = img.naturalWidth * ratio;
       const dh = img.naturalHeight * ratio;
-      ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+      ctx.drawImage(img, x + (w - dw) * px, y + (h - dh) * py, dw, dh);
     }
     ctx.restore();
   }
 
   for (const el of root.querySelectorAll<HTMLElement>("[data-text]")) {
+    const text = el.textContent ?? "";
+    if (!text.trim()) continue;
     const style = getComputedStyle(el);
     const { x, y, w, h } = box(el);
     ctx.fillStyle = style.backgroundColor;
@@ -71,29 +79,37 @@ export async function exportCollage(root: HTMLElement): Promise<Blob> {
     ctx.font = `${style.fontStyle} ${style.fontWeight} ${parseFloat(style.fontSize) * scale}px ${style.fontFamily}`;
     ctx.fillStyle = style.color;
     ctx.textBaseline = "middle";
-    ctx.fillText(fitText(ctx, el.textContent ?? "", w - padding * 2), x + padding, y + h / 2);
+    const maxWidth = w - padding * 2;
+    // Canvas меряет шрифт чуть иначе, чем браузер: целиком видимый текст рисуем без обрезки, слегка сжимая.
+    const truncated = el.scrollWidth > el.clientWidth + 1;
+    if (truncated) ctx.fillText(fitText(ctx, text, maxWidth), x + padding, y + h / 2);
+    else ctx.fillText(text, x + padding, y + h / 2, maxWidth);
   }
 
   return new Promise((resolve, reject) =>
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Не удалось создать PNG."))),
+      (blob) => (blob?.size ? resolve(blob) : reject(new Error("Не удалось создать PNG."))),
       "image/png",
     ),
   );
 }
 
-/** Ждёт загрузки изображения; false, если файл не удалось декодировать. */
-function isImageReady(img: HTMLImageElement): Promise<boolean> {
-  if (img.complete) return Promise.resolve(img.naturalWidth > 0);
-  return new Promise((resolve) => {
-    img.addEventListener("load", () => resolve(true), { once: true });
-    img.addEventListener("error", () => resolve(false), { once: true });
-  });
+/** Загружает исходный файл фото; null, если его не удалось декодировать. */
+async function loadImage(src: string): Promise<HTMLImageElement | null> {
+  const img = new Image();
+  img.src = src;
+  try {
+    await img.decode();
+    return img.naturalWidth > 0 ? img : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Обрезает текст с многоточием, как CSS truncate. */
 function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
-  if (ctx.measureText(text).width <= maxWidth) return text;
+  // Допуск на субпиксельные расхождения измерений Canvas и CSS.
+  if (ctx.measureText(text).width <= maxWidth * 1.01) return text;
   let end = text.length;
   while (end > 0 && ctx.measureText(`${text.slice(0, end)}…`).width > maxWidth) end--;
   return `${text.slice(0, end)}…`;

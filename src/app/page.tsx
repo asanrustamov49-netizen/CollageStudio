@@ -1,5 +1,5 @@
-import { TemplateCatalog } from "@/components/TemplateCatalog";
+import { StartScreen } from "@/components/start/StartScreen";
 
 export default function Home() {
-  return <TemplateCatalog category="all" />;
+  return <StartScreen />;
 }
