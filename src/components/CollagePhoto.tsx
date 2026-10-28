@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { skipOptimization } from "@/lib/collageState";
 import { useState } from "react";
 import type { PhotoSlot } from "@/types/collage";
 
@@ -28,7 +29,7 @@ export function CollagePhoto({ slot, sizes, eager }: { slot: PhotoSlot; sizes: s
       sizes={sizes}
       loading={eager ? "eager" : "lazy"}
       draggable={false}
-      unoptimized={slot.src.startsWith("blob:")}
+      unoptimized={skipOptimization(slot.src)}
       onError={() => setFailedSrc(slot.src)}
       data-photo
       data-src={slot.src}

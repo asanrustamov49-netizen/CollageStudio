@@ -13,10 +13,13 @@ interface MusicApi {
   error: string | null;
   toggle: () => Promise<void>;
   selectTrack: (id: TrackId) => Promise<void>;
+  /** Выбирает настроение и сразу включает его (по нажатию пользователя). */
+  playTrack: (id: TrackId) => Promise<void>;
   setVolume: (volume: number) => void;
 }
 
 const MusicContext = createContext<MusicApi | null>(null);
+const DisableContext = createContext<(disabled: boolean) => void>(() => {});
 
 /**
  * Один плеер на всё приложение: музыка не прерывается при переходе между
@@ -29,7 +32,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [trackId, setTrackId] = useState<TrackId>("dawn");
   const [volume, setVolumeState] = useState(0.5);
   const [error, setError] = useState<string | null>(null);
-  const disabled = usePathname().startsWith("/templates/");
+  const [disabled, setDisabled] = useState(false);
 
   // В редакторе музыка не нужна: состояние сбрасывается сразу при переходе.
   if (disabled && playing) setPlaying(false);
@@ -72,13 +75,35 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       setTrackId(id);
       if (playing) await play(id);
     },
+    async playTrack(id) {
+      setError(null);
+      setTrackId(id);
+      await play(id);
+    },
     setVolume(next) {
       setVolumeState(next);
       musicRef.current?.setVolume(next);
     },
   };
 
-  return <MusicContext value={api}>{children}</MusicContext>;
+  return (
+    <MusicContext value={api}>
+      <DisableContext value={setDisabled}>{children}</DisableContext>
+    </MusicContext>
+  );
+}
+
+/**
+ * Выключает музыку в редакторе. Читает адрес страницы, поэтому рендерится
+ * внутри <Suspense> отдельно от провайдера.
+ */
+export function MusicRouteGuard() {
+  const pathname = usePathname();
+  const setDisabled = useContext(DisableContext);
+  useEffect(() => {
+    setDisabled(pathname.startsWith("/projects/"));
+  }, [pathname, setDisabled]);
+  return null;
 }
 
 export function useMusic(): MusicApi {

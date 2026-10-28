@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
-import { MusicProvider } from "@/components/music/MusicProvider";
+import { Suspense } from "react";
+import { AccountBootstrap } from "@/components/account/AccountBits";
+import { MusicProvider, MusicRouteGuard } from "@/components/music/MusicProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,9 +21,12 @@ const playfair = Playfair_Display({
   style: ["normal", "italic"],
 });
 
+export const viewport: Viewport = { themeColor: "#0c0a09" };
+
 export const metadata: Metadata = {
-  title: "Collage Studio",
-  description: "Создавайте коллажи из своих изображений.",
+  title: { default: "Collage Studio — фотоколлажи и подарки с QR-кодом", template: "%s · Collage Studio" },
+  description: "Готовые фотоколлажи: замените снимки своими, скачайте PNG, JPG или PDF либо подарите страницу-сюрприз по QR-коду.",
+  applicationName: "Collage Studio",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -31,7 +36,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <MusicProvider>{children}</MusicProvider>
+        <MusicProvider>
+          {children}
+          <AccountBootstrap />
+          <Suspense fallback={null}>
+            <MusicRouteGuard />
+          </Suspense>
+        </MusicProvider>
       </body>
     </html>
   );

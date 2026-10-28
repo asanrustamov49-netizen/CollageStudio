@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode, Ref } from "react";
-import { getFontFamily, getTextFontSize } from "@/data/templates";
+import { getFontFamily, getLayout, getTextFontSize, toCqw } from "@/data/templates";
 import type { CollageState, CollageTemplate, CollageText } from "@/types/collage";
 import { CollagePhoto } from "./CollagePhoto";
 
@@ -21,6 +21,10 @@ interface TemplatePreviewProps {
 
 const cardSizes = "(min-width: 1280px) 22vw, (min-width: 640px) 40vw, 90vw";
 
+/**
+ * Коллаж: сетка раскладки с фото и тексты поверх. Эту же разметку читает экспорт,
+ * поэтому всё, что видно здесь, попадает в файл.
+ */
 export function TemplatePreview({
   template,
   state,
@@ -31,15 +35,20 @@ export function TemplatePreview({
   renderCellOverlay,
   textProps,
 }: TemplatePreviewProps) {
-  const { layout, palette } = template;
+  const layout = getLayout(state.layoutId);
+  const { style } = state;
   const interactive = Boolean(cellProps);
 
   return (
     <div
       ref={ref}
       aria-hidden={interactive ? undefined : true}
-      className="@container relative grid aspect-[4/3] gap-1.5 overflow-hidden bg-white p-1.5"
+      className="@container relative grid overflow-hidden"
       style={{
+        aspectRatio: style.aspect,
+        background: style.background,
+        gap: toCqw(style.gap),
+        padding: toCqw(style.gap),
         gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${layout.rows}, minmax(0, 1fr))`,
       }}
@@ -52,10 +61,10 @@ export function TemplatePreview({
             key={area}
             data-cell
             {...rest}
-            className={`relative overflow-hidden rounded-md ${palette[i % palette.length]} ${className}`}
-            style={{ gridArea: area }}
+            className={`relative overflow-hidden ${template.palette[i % template.palette.length]} ${className}`}
+            style={{ gridArea: area, borderRadius: toCqw(style.radius) }}
           >
-            {slot && <CollagePhoto slot={slot} sizes={sizes} eager={eager} />}
+            {slot?.src && <CollagePhoto slot={slot} sizes={sizes} eager={eager} />}
             {renderCellOverlay?.(i)}
           </div>
         );
@@ -67,12 +76,13 @@ export function TemplatePreview({
             key={t.id}
             data-text
             {...rest}
-            className={`absolute w-max max-w-[90%] -translate-x-1/2 -translate-y-1/2 truncate rounded-[0.3em] px-[0.6em] py-[0.25em] leading-tight ${t.background ? "bg-white/85 shadow-sm" : ""} ${className}`}
+            className={`absolute w-max max-w-[90%] -translate-x-1/2 -translate-y-1/2 rounded-[0.3em] px-[0.6em] py-[0.25em] text-center leading-tight break-words whitespace-pre-wrap ${t.background ? "bg-white/85 shadow-sm" : ""} ${className}`}
             style={{
               left: `${t.x}%`,
               top: `${t.y}%`,
               fontFamily: getFontFamily(t.fontId),
               fontSize: getTextFontSize(t.size),
+              fontWeight: t.bold ? 700 : 400,
               color: t.color,
             }}
           >

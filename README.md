@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Collage Studio
 
-## Getting Started
+Готовые фотоколлажи и подарки с QR-кодом. Next.js 16, React 19, Tailwind CSS 4; сервер — route handlers Next.js с файловым хранилищем.
 
-First, run the development server:
+## Запуск
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm run lint
+npx tsc --noEmit
+npm run build && npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Структура
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `src/app/(site)` — публичные страницы с общей шапкой и подвалом: главная, `/ideas` (подборки по поводам), `/guide` (как это работает, размеры для печати), `/help` (вопросы с поиском), `/privacy`, `/templates/[id]`.
+- `src/app/(app)` — разделы платформы в оболочке с сайдбаром (на телефоне — нижние вкладки): `/collages`, `/projects`, `/favorites`, `/gifts`, `/account`.
+- `src/app/(editor)` — редактор `/projects/[id]` на весь экран.
+- `src/app/api` — сервер: аккаунты, проекты, избранное, загрузки, подарки.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Что умеет
 
-## Learn More
+- **Аккаунты** (`/register`, `/login`, `/account`): пароли — scrypt-хеш, сессия в httpOnly-cookie, проекты, избранное и подарки доступны с любого устройства; удаление аккаунта с паролем.
+- **Избранное** (`/favorites`): сердечко на шаблоне; без аккаунта — на устройстве, после входа — в аккаунте.
+- **Каталог** (`/collages`, `/collages/[тема]`): 29 шаблонов в 10 темах (включая мудборды), поиск, фильтр по числу фото, сортировка, просмотр шаблона (`/templates/[id]`).
+- **Проекты** (`/projects`): несколько проектов на один шаблон, автосохранение со статусом, копия, переименование, удаление.
+- **Редактор** (`/projects/[id]`): замена/удаление/перестановка фото, перетаскивание файлов, кадр и масштаб, 9 макетов без потери фото, тексты (многострочные, шрифт, размер, жирность, цвет), цвет рамки, отступы, скругление, формат 4:3 / 1:1 / 3:4, отмена и повтор, сброс с подтверждением. На телефоне — нижняя панель действий и шторка настроек.
+- **Экспорт**: PNG, JPG, PDF с предпросмотром, до 3600 px.
+- **Подарок**: ссылка и QR-код на страницу с конвертом, сообщением, коллажем, галереей на весь экран и музыкой по кнопке. В аккаунте — короткая ссылка `/g/<id>` со своими фото и своей песней (MP3/M4A/OGG/WAV до 12 МБ); без аккаунта — `/gift#…` с фото шаблона.
+- **Логотип**: `src/components/ui/Logo.tsx`, иконка вкладки `src/app/icon.svg`, иконка iPhone `src/app/apple-icon.tsx`, манифест `src/app/manifest.ts`.
 
-To learn more about Next.js, take a look at the following resources:
+## Архитектурные решения и ограничения
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Хранение.** Без входа проекты лежат в `localStorage`, свои фото — Blob в IndexedDB. После входа всё дополнительно сохраняется на сервере в `.data/` (JSON-файл и папка загрузок, в git не попадают); статус «Сохранено в аккаунте» показывается только после ответа сервера. При выходе данные убираются с устройства.
+- **Сервер.** Файловое хранилище рассчитано на один процесс `npm start` на своём компьютере или VPS. На бессерверном хостинге (Vercel) файлы не сохраняются между запросами — там нужна настоящая БД и объектное хранилище.
+- **Безопасность.** Проверка владельца на сервере для проектов, подарков и файлов; запросы с чужих сайтов отклоняются (Origin); ограничение частоты входа и регистрации; тип загрузок проверяется по содержимому, лимиты 15 МБ на фото, 12 МБ на песню, 300 МБ на аккаунт. Файлы открываются по случайному адресу без входа — так их видит получатель подарка.
+- **Cookie.** В `npm start` cookie сессии помечена Secure: работает на https и на localhost. Для проверки с телефона по IP в локальной сети по http запустите `INSECURE_COOKIES=1 npm start`.
+- **Ссылки и QR** ведут на адрес, с которого открыт сайт: с localhost — только на этом компьютере.
+- **Музыка** синтезируется Web Audio API (`src/components/music/`), включается только по нажатию и выключается в редакторе.
+- **Фото шаблонов** — демонстрационные снимки Unsplash (Unsplash License) в `public/photos`.
