@@ -21,7 +21,7 @@ export default function IdeasPage() {
           <h1 className="mt-3 max-w-3xl font-display text-4xl text-balance md:text-6xl">Не знаете, с чего начать? Выберите повод</h1>
           <p className="mt-4 max-w-2xl text-stone-400">Для каждого повода — подходящие шаблоны и короткие советы: какие фото поставить в главную ячейку, какой выбрать шрифт и формат.</p>
           <nav aria-label="Поводы" className="-mx-4 mt-8 md:mx-0">
-            <ul className="no-scrollbar flex gap-2 overflow-x-auto px-4 md:flex-wrap md:px-0">
+            <ul className="no-scrollbar flex gap-2 overflow-x-auto px-4 [mask-image:linear-gradient(to_right,#000_88%,transparent)] md:flex-wrap md:px-0 md:[mask-image:none]">
               {ideaCollections.map((c) => (
                 <li key={c.id} className="shrink-0">
                   <a href={`#${c.id}`} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-800 bg-stone-900 px-4 text-sm text-stone-300 hover:border-amber-300/60 hover:text-white">

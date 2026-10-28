@@ -33,7 +33,7 @@ export function HelpView() {
             className="block min-h-12 w-full rounded-2xl border border-stone-700 bg-stone-900 pr-4 pl-12 text-base text-stone-100 placeholder:text-stone-500 focus:border-amber-300 focus:outline-none"
           />
         </label>
-        <div role="group" aria-label="Темы вопросов" className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
+        <div role="group" aria-label="Темы вопросов" className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 [mask-image:linear-gradient(to_right,#000_88%,transparent)] md:mx-0 md:flex-wrap md:px-0 md:[mask-image:none]">
           {[null, ...topics].map((t) => (
             <button
               key={t ?? "all"}

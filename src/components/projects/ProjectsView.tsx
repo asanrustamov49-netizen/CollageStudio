@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Modal } from "@/components/editor/Modal";
 import { ToastList, useToasts } from "@/components/editor/Toasts";
+import { PopularTemplates } from "@/components/PopularTemplates";
 import { TemplatePreview } from "@/components/TemplatePreview";
 import { Icon } from "@/components/ui/Icon";
 import { ui } from "@/components/ui/styles";
@@ -48,6 +49,7 @@ export function ProjectsView() {
             ))}
           </ul>
         ) : sorted.length === 0 ? (
+          <>
           <div className="mt-10 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-700 px-6 py-16 text-center">
             <Icon name="folder" className="size-10 text-stone-600" />
             <p className="font-display text-2xl">Проектов пока нет</p>
@@ -56,6 +58,8 @@ export function ProjectsView() {
               Открыть каталог
             </Link>
           </div>
+          <PopularTemplates title="Начните с популярного" />
+          </>
         ) : (
           <ul className="mt-6 grid gap-5 sm:grid-cols-2 2xl:grid-cols-3">
             {sorted.map((p) => (
@@ -131,7 +135,7 @@ function ProjectCard({ meta, onRename, onDelete, onDuplicate }: { meta: ProjectM
             Открыть
           </button>
           <button type="button" onClick={onRename} aria-label="Переименовать" title="Переименовать" className={ui.darkIcon}>
-            <Icon name="type" />
+            <Icon name="edit" />
           </button>
           <button type="button" onClick={onDuplicate} aria-label="Сделать копию" title="Сделать копию" className={ui.darkIcon}>
             <Icon name="copy" />

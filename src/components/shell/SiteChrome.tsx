@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { AccountButton } from "@/components/account/AccountBits";
+import { Equalizer, useMusic } from "@/components/music/MusicProvider";
 import { Icon } from "@/components/ui/Icon";
 import { Logo } from "@/components/ui/Logo";
 import { ui } from "@/components/ui/styles";
@@ -48,6 +49,7 @@ function PathNav(props: { onNavigate?: () => void; vertical?: boolean }) {
 /** Шапка публичных страниц: логотип, разделы, аккаунт; на телефоне — выпадающее меню. */
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const music = useMusic();
 
   useEffect(() => {
     if (!open) return;
@@ -68,6 +70,16 @@ export function SiteHeader() {
           </Suspense>
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={music.toggle}
+            aria-pressed={music.playing}
+            aria-label={music.playing ? `Выключить музыку «${music.track.title}»` : "Включить фоновую музыку"}
+            title={music.playing ? `Играет: ${music.track.title}` : "Фоновая музыка"}
+            className={`inline-flex size-11 items-center justify-center rounded-full border transition-colors ${music.playing ? "border-amber-300/50 text-amber-300" : "border-stone-700 text-stone-300 hover:border-stone-500"}`}
+          >
+            {music.playing ? <Equalizer playing bars={3} /> : <Icon name="music" className="size-[18px]" />}
+          </button>
           <div className="hidden sm:block">
             <AccountButton compact />
           </div>

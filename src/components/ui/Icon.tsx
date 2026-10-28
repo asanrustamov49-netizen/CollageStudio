@@ -42,6 +42,7 @@ const paths = {
   sliders: "M4 7h9M17 7h3M15 5v4M4 17h3M11 17h9M9 15v4",
   down: "m6 9 6 6 6-6",
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0",
+  edit: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
   printer: "M7 8V3h10v5M7 17H4v-7h16v7h-3M7 14h10v7H7z",
 } as const;
 

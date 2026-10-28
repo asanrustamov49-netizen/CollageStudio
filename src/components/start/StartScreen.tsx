@@ -6,7 +6,6 @@ import { categories, getCategoryHref, getInitialState, getTemplateById, template
 import { encodeGiftPlain, giftPath } from "@/lib/gift";
 import type { CollageTemplate } from "@/types/collage";
 import { HeroStack } from "./HeroStack";
-import { MusicControl } from "./MusicControl";
 
 const pick = (ids: string[]) => ids.map(getTemplateById).filter((t): t is CollageTemplate => Boolean(t));
 const showcase = pick(["mountain-views", "big-day", "party-time"]);
@@ -28,6 +27,15 @@ const steps: { icon: IconName; title: string; text: string }[] = [
   { icon: "grid", title: "Выберите шаблон", text: `${templates.length} композиций для путешествий, праздников и будней — от плёнки до журнального разворота.` },
   { icon: "image", title: "Добавьте свои фото", text: "Нажмите на ячейку или перетащите снимки. Кадр, подписи, цвета и макет меняются в пару касаний." },
   { icon: "gift", title: "Скачайте или подарите", text: "PNG, JPG и PDF для печати — или страница-сюрприз со ссылкой и QR-кодом для близкого человека." },
+];
+
+const features: { icon: IconName; title: string; text: string }[] = [
+  { icon: "layout", title: "9 макетов", text: "От сетки и плёнки до журнального разворота. Фото не теряются при смене макета." },
+  { icon: "printer", title: "Готово к печати", text: "PNG, JPG и PDF до 3600 px с предпросмотром итогового файла." },
+  { icon: "gift", title: "Подарок с QR", text: "Страница-сюрприз с конвертом, галереей и вашим посланием." },
+  { icon: "music", title: "Музыка и песни", text: "Три настроения фоновой музыки или своя песня в подарке." },
+  { icon: "folder", title: "С любого устройства", text: "С аккаунтом проекты и избранное синхронизируются сами." },
+  { icon: "image", title: "Удобно с телефона", text: "Нижняя панель, шторка настроек и перетаскивание пальцем." },
 ];
 
 export function StartScreen() {
@@ -102,6 +110,25 @@ export function StartScreen() {
           </div>
         </section>
 
+        <section aria-labelledby="features" className="border-t border-stone-900 px-4 py-16 md:px-10">
+          <div className="mx-auto max-w-6xl">
+            <h2 id="features" className="font-display text-3xl sm:text-4xl">Всё для коллажа — в одном месте</h2>
+            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((f) => (
+                <li key={f.title} className="flex gap-4 rounded-2xl p-5 ring-1 ring-stone-800">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-stone-900 text-amber-300 ring-1 ring-stone-800">
+                    <Icon name={f.icon} />
+                  </span>
+                  <span>
+                    <span className="block font-display text-lg">{f.title}</span>
+                    <span className="mt-1 block text-sm text-stone-400">{f.text}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         <section aria-labelledby="themes" className="border-t border-stone-900 px-4 py-16 md:px-10">
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-wrap items-end justify-between gap-3">
@@ -134,11 +161,22 @@ export function StartScreen() {
           </div>
         </section>
 
+        <section className="px-4 pb-20 md:px-10">
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-amber-300 px-6 py-12 text-center text-stone-950 sm:px-12">
+            <h2 className="font-display text-3xl text-balance sm:text-5xl">Первый коллаж — за пару минут</h2>
+            <p className="mx-auto mt-3 max-w-xl text-stone-800">Без регистрации: выберите шаблон, замените фото и скачайте результат.</p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link href={getCategoryHref("all")} className="inline-flex min-h-12 items-center rounded-full bg-stone-950 px-7 text-sm font-semibold text-white hover:bg-stone-800">
+                Открыть каталог
+              </Link>
+              <Link href="/ideas" className="inline-flex min-h-12 items-center rounded-full border border-stone-950/30 px-7 text-sm font-semibold hover:bg-amber-200">
+                Посмотреть идеи
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
 
-      <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 max-w-[calc(100%-2rem)]">
-        <MusicControl />
-      </div>
     </div>
   );
 }

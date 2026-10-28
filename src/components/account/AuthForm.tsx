@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { TemplatePreview } from "@/components/TemplatePreview";
 import { Icon } from "@/components/ui/Icon";
+import { getInitialState, getTemplateById } from "@/data/templates";
 import { Logo } from "@/components/ui/Logo";
 import { ui } from "@/components/ui/styles";
 import { login, register } from "@/store/account";
+
+const showcase = getTemplateById("little-moments")!;
+const perks = ["Проекты и избранное — на любом устройстве", "Свои фото и песня в подарках по QR-коду", "Короткие ссылки, которые можно удалить в любой момент"];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const darkField =
@@ -52,7 +57,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const field = (key: keyof typeof errors) => touched && errors[key];
 
   return (
-    <div className="flex flex-1 flex-col bg-stone-950 text-stone-100">
+    <div className="grid flex-1 bg-stone-950 text-stone-100 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <div className="flex flex-col">
       <header className="px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-4 md:px-10">
         <Link href="/" aria-label="Collage Studio — на главную">
           <Logo />
@@ -118,6 +124,22 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           Можно и без аккаунта: <Link href="/collages" className="underline">проекты сохранятся на этом устройстве</Link>.
         </p>
       </main>
+      </div>
+      <aside aria-hidden className="relative hidden overflow-hidden border-l border-stone-800 bg-[#100d0b] lg:flex lg:flex-col lg:justify-center lg:px-12">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_60%_30%,rgba(252,211,77,0.14),transparent)]" />
+        <div className="relative mx-auto w-full max-w-lg">
+          <div className="rotate-2 overflow-hidden rounded-2xl shadow-2xl ring-1 shadow-black/60 ring-stone-800">
+            <TemplatePreview template={showcase} state={getInitialState(showcase)} sizes="40vw" eager />
+          </div>
+          <ul className="mt-10 space-y-3 text-stone-300">
+            {perks.map((p) => (
+              <li key={p} className="flex gap-3">
+                <Icon name="check" className="size-5 text-amber-300" /> {p}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
     </div>
   );
 }
