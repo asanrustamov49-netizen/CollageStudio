@@ -44,7 +44,6 @@ async function init() {
     if (user) await signedIn(user);
     else set({ status: "guest" });
   } catch {
-    // Сервер недоступен — приложение работает как гость, всё сохраняется на устройстве.
     set({ status: "guest" });
   }
 }
@@ -53,17 +52,27 @@ export function useAccount(): AccountState {
   useEffect(() => {
     void init();
   }, []);
-  return useSyncExternalStore(subscribe, () => account, () => serverState);
+  return useSyncExternalStore(
+    subscribe,
+    () => account,
+    () => serverState,
+  );
 }
 
 export async function login(email: string, password: string) {
-  const { user } = await api<{ user: PublicUser }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+  const { user } = await api<{ user: PublicUser }>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
   started = true;
   await signedIn(user);
 }
 
 export async function register(name: string, email: string, password: string) {
-  const { user } = await api<{ user: PublicUser }>("/api/auth/register", { method: "POST", body: JSON.stringify({ name, email, password }) });
+  const { user } = await api<{ user: PublicUser }>("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ name, email, password }),
+  });
   started = true;
   await signedIn(user);
 }
@@ -81,16 +90,21 @@ export async function logout() {
 }
 
 export async function updateName(name: string) {
-  const { user } = await api<{ user: PublicUser }>("/api/auth/me", { method: "PATCH", body: JSON.stringify({ name }) });
+  const { user } = await api<{ user: PublicUser }>("/api/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
   if (account.status === "user") set({ ...account, user });
 }
 
 export async function deleteAccount(password: string) {
-  await api("/api/auth/me", { method: "DELETE", body: JSON.stringify({ password }) });
+  await api("/api/auth/me", {
+    method: "DELETE",
+    body: JSON.stringify({ password }),
+  });
   signedOut();
 }
 
-/** Повторная синхронизация после ошибки. */
 export async function resync() {
   if (account.status === "user") await signedIn(account.user);
 }
