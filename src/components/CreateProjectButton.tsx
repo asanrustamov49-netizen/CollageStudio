@@ -1,13 +1,19 @@
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { ui } from "@/components/ui/styles";
 import { createProject } from "@/store/projects";
 
-/** Создаёт проект из шаблона и открывает его в редакторе. */
-export function CreateProjectButton({ templateId, className = ui.accent, label = "Создать проект" }: { templateId: string; className?: string; label?: string }) {
+export function CreateProjectButton({
+  templateId,
+  className = ui.accent,
+  label = "Создать проект",
+}: {
+  templateId: string;
+  className?: string;
+  label?: string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +32,12 @@ export function CreateProjectButton({ templateId, className = ui.accent, label =
 
   return (
     <>
-      <button type="button" onClick={create} disabled={busy} className={className}>
+      <button
+        type="button"
+        onClick={create}
+        disabled={busy}
+        className={className}
+      >
         <Icon name="plus" className="size-4" /> {busy ? "Создаём…" : label}
       </button>
       {error && (

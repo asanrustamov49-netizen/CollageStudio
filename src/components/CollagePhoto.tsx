@@ -1,15 +1,18 @@
 "use client";
-
 import Image from "next/image";
 import { skipOptimization } from "@/lib/collageState";
 import { useState } from "react";
 import type { PhotoSlot } from "@/types/collage";
 
-/**
- * Фото ячейки с кадрированием. Атрибуты data-* читает экспорт в PNG,
- * чтобы нарисовать исходный файл в полном разрешении с тем же кадром.
- */
-export function CollagePhoto({ slot, sizes, eager }: { slot: PhotoSlot; sizes: string; eager?: boolean }) {
+export function CollagePhoto({
+  slot,
+  sizes,
+  eager,
+}: {
+  slot: PhotoSlot;
+  sizes: string;
+  eager?: boolean;
+}) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   if (failedSrc === slot.src) {
@@ -37,7 +40,11 @@ export function CollagePhoto({ slot, sizes, eager }: { slot: PhotoSlot; sizes: s
       data-y={slot.y}
       data-zoom={slot.zoom}
       className="pointer-events-none select-none object-cover"
-      style={{ objectPosition: origin, transform: `scale(${slot.zoom})`, transformOrigin: origin }}
+      style={{
+        objectPosition: origin,
+        transform: `scale(${slot.zoom})`,
+        transformOrigin: origin,
+      }}
     />
   );
 }
