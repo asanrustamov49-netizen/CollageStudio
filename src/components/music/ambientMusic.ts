@@ -1,17 +1,9 @@
-/**
- * Фоновая музыка начального экрана, синтезируемая через Web Audio API:
- * мягкие аккорды и арпеджио без внешних аудиофайлов.
- * AudioContext создаётся только по действию пользователя, поэтому
- * ограничения браузеров на автовоспроизведение не нарушаются.
- */
-
 export type TrackId = "dawn" | "night" | "summer";
 
 interface Track {
   id: TrackId;
   title: string;
   mood: string;
-  /** Аккорды в герцах, по 8 шагов арпеджио на аккорд. */
   chords: number[][];
   step: number;
   filter: number;
@@ -24,7 +16,6 @@ export const TRACKS: Track[] = [
     id: "dawn",
     title: "Рассвет",
     mood: "Спокойно и светло",
-    // Cmaj7 → Am7 → Fmaj7 → G6
     chords: [
       [130.81, 164.81, 196.0, 246.94],
       [110.0, 130.81, 164.81, 196.0],
@@ -40,7 +31,6 @@ export const TRACKS: Track[] = [
     id: "night",
     title: "Ночь",
     mood: "Глубоко и медленно",
-    // Am7 → Fmaj7 → Dm7 → Em7
     chords: [
       [110.0, 130.81, 164.81, 196.0],
       [87.31, 110.0, 130.81, 164.81],
@@ -56,7 +46,6 @@ export const TRACKS: Track[] = [
     id: "summer",
     title: "Лето",
     mood: "Ярко и легко",
-    // D → Bm7 → G → A
     chords: [
       [146.83, 185.0, 220.0, 293.66],
       [123.47, 146.83, 185.0, 220.0],
@@ -77,7 +66,10 @@ export interface AmbientMusic {
   setVolume(volume: number): void;
 }
 
-export function createAmbientMusic(initialVolume: number, trackId: TrackId = "dawn"): AmbientMusic {
+export function createAmbientMusic(
+  initialVolume: number,
+  trackId: TrackId = "dawn",
+): AmbientMusic {
   const track = TRACKS.find((t) => t.id === trackId) ?? TRACKS[0];
   const chordSeconds = track.step * 8;
   let ctx: AudioContext | null = null;
@@ -98,7 +90,6 @@ export function createAmbientMusic(initialVolume: number, trackId: TrackId = "da
     filter.frequency.value = track.filter;
     filter.connect(master);
 
-    // Простое эхо для объёма.
     const delay = audio.createDelay();
     delay.delayTime.value = 0.38;
     const feedback = audio.createGain();
@@ -112,7 +103,13 @@ export function createAmbientMusic(initialVolume: number, trackId: TrackId = "da
     bus = input;
   }
 
-  function note(freq: number, time: number, length: number, gain: number, type: OscillatorType) {
+  function note(
+    freq: number,
+    time: number,
+    length: number,
+    gain: number,
+    type: OscillatorType,
+  ) {
     if (!ctx || !bus) return;
     const osc = ctx.createOscillator();
     const env = ctx.createGain();
@@ -152,7 +149,8 @@ export function createAmbientMusic(initialVolume: number, trackId: TrackId = "da
         }
       }
       const pattern = [0, 2, 1, 3, 2, 1, 3, 0];
-      if (inChord !== 7) pluck(chord[pattern[inChord]] * track.pluckOctave, nextStep);
+      if (inChord !== 7)
+        pluck(chord[pattern[inChord]] * track.pluckOctave, nextStep);
       nextStep += track.step;
       step++;
     }
@@ -169,13 +167,16 @@ export function createAmbientMusic(initialVolume: number, trackId: TrackId = "da
       if (ctx) return;
       const AudioCtor =
         window.AudioContext ??
-        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
       if (!AudioCtor) throw new Error("Браузер не поддерживает Web Audio.");
       const audio = new AudioCtor();
       ctx = audio;
       setup(audio);
-      // Без действия пользователя браузер может не дать запустить звук: resume() не завершится.
-      await Promise.race([audio.resume(), new Promise((resolve) => setTimeout(resolve, 1500))]);
+      await Promise.race([
+        audio.resume(),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ]);
       if (ctx !== audio) return; // Выключили, пока шёл запуск.
       if (audio.state !== "running") {
         music.stop();
@@ -196,7 +197,6 @@ export function createAmbientMusic(initialVolume: number, trackId: TrackId = "da
       master = null;
       bus = null;
       if (!audio) return;
-      // Плавно затихаем и закрываем контекст, освобождая аудиоустройство и узлы.
       gain?.gain.cancelScheduledValues(audio.currentTime);
       gain?.gain.setTargetAtTime(0, audio.currentTime, 0.1);
       setTimeout(() => void audio.close().catch(() => {}), 500);
