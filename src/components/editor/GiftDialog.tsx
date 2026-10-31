@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import QRCode from "qrcode";
 import { useState } from "react";
@@ -13,7 +12,6 @@ import { useAccount } from "@/store/account";
 import type { CollageState, CollageTemplate } from "@/types/collage";
 import { Modal } from "./Modal";
 
-/** Предел длины ссылки, при котором QR-код ещё уверенно читается камерой телефона. */
 const MAX_QR_URL = 1800;
 const MAX_SONG_BYTES = 12 * 1024 * 1024;
 
@@ -60,7 +58,6 @@ export function GiftDialog({ template, state, onClose, notify }: GiftDialogProps
       let url: string;
       const base = { templateId: template.id, to: to.trim(), message: message.trim(), track: music && music !== "own" ? music : null };
       if (signedIn) {
-        // Фото, которые не успели загрузиться в аккаунт, заменяются фото шаблона.
         const giftState = { ...state, photos: state.photos.map((p, i) => (p.src.startsWith("blob:") ? { ...emptySlot, src: template.photos[i] ?? "" } : p)) };
         const audio = music === "own" && song ? await uploadFile(song, song.name) : null;
         const { id } = await api<{ id: string }>("/api/gifts", { method: "POST", body: JSON.stringify(serializeGift({ ...base, audio, state: giftState })) });
@@ -97,7 +94,6 @@ export function GiftDialog({ template, state, onClose, notify }: GiftDialogProps
     try {
       await navigator.share({ title: `Подарок для ${to.trim()}`, url: result.url });
     } catch {
-      // Пользователь закрыл окно «Поделиться» — это не ошибка.
     }
   }
 
@@ -135,7 +131,6 @@ export function GiftDialog({ template, state, onClose, notify }: GiftDialogProps
       {result ? (
         <div className="space-y-4">
           <div className="mx-auto w-56 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-stone-200">
-            {/* eslint-disable-next-line @next/next/no-img-element -- QR как data URL */}
             <img src={result.qr} alt={`QR-код подарка для ${to.trim()}`} className="block w-full [image-rendering:pixelated]" />
           </div>
           <div className="flex gap-2">
