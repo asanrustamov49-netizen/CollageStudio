@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { categories, getCategoryHref, getLayout } from "@/data/templates";
@@ -12,7 +11,17 @@ import { ui } from "./ui/styles";
 type Sort = "popular" | "name" | "photos";
 const counts = [3, 4, 5, 6];
 
-export function CatalogView({ category, title, items, showCategories = true }: { category: CategorySlug; title: string; items: CollageTemplate[]; showCategories?: boolean }) {
+export function CatalogView({
+  category,
+  title,
+  items,
+  showCategories = true,
+}: {
+  category: CategorySlug;
+  title: string;
+  items: CollageTemplate[];
+  showCategories?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [count, setCount] = useState<number | null>(null);
   const [sort, setSort] = useState<Sort>("popular");
@@ -21,11 +30,19 @@ export function CatalogView({ category, title, items, showCategories = true }: {
     const q = query.trim().toLowerCase();
     const list = items.filter(
       (t) =>
-        (!q || `${t.title} ${t.subtitle} ${t.description}`.toLowerCase().includes(q)) &&
+        (!q ||
+          `${t.title} ${t.subtitle} ${t.description}`
+            .toLowerCase()
+            .includes(q)) &&
         (count === null || getLayout(t.layout).cells.length === count),
     );
-    if (sort === "name") return [...list].sort((a, b) => a.title.localeCompare(b.title));
-    if (sort === "photos") return [...list].sort((a, b) => getLayout(b.layout).cells.length - getLayout(a.layout).cells.length);
+    if (sort === "name")
+      return [...list].sort((a, b) => a.title.localeCompare(b.title));
+    if (sort === "photos")
+      return [...list].sort(
+        (a, b) =>
+          getLayout(b.layout).cells.length - getLayout(a.layout).cells.length,
+      );
     return list;
   }, [items, query, count, sort]);
 
@@ -41,34 +58,39 @@ export function CatalogView({ category, title, items, showCategories = true }: {
         <div>
           <h1 className="font-display text-4xl md:text-5xl">{title}</h1>
           <p className="mt-1 text-sm text-stone-400" aria-live="polite">
-            {filtered ? `Найдено: ${visible.length} из ${items.length}` : `Шаблонов: ${items.length}`}
+            {filtered
+              ? `Найдено: ${visible.length} из ${items.length}`
+              : `Шаблонов: ${items.length}`}
           </p>
         </div>
       </header>
 
       {showCategories && (
-      <nav aria-label="Темы" className="-mx-4 mt-6 md:-mx-10">
-        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-4 [mask-image:linear-gradient(to_right,#000_90%,transparent)] md:px-10">
-          {categories.map((c) => (
-            <li key={c.slug} className="shrink-0">
-              <Link
-                href={getCategoryHref(c.slug)}
-                aria-current={c.slug === category ? "page" : undefined}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm whitespace-nowrap transition-colors ${c.slug === category ? "bg-amber-300 font-semibold text-stone-950" : "border border-stone-800 bg-stone-900 text-stone-300 hover:border-stone-600 hover:text-white"}`}
-              >
-                <Icon name={categoryIcons[c.slug]} className="size-4" />
-                {c.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+        <nav aria-label="Темы" className="-mx-4 mt-6 md:-mx-10">
+          <ul className="no-scrollbar flex gap-2 overflow-x-auto px-4 [mask-image:linear-gradient(to_right,#000_90%,transparent)] md:px-10">
+            {categories.map((c) => (
+              <li key={c.slug} className="shrink-0">
+                <Link
+                  href={getCategoryHref(c.slug)}
+                  aria-current={c.slug === category ? "page" : undefined}
+                  className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm whitespace-nowrap transition-colors ${c.slug === category ? "bg-amber-300 font-semibold text-stone-950" : "border border-stone-800 bg-stone-900 text-stone-300 hover:border-stone-600 hover:text-white"}`}
+                >
+                  <Icon name={categoryIcons[c.slug]} className="size-4" />
+                  {c.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       )}
 
       <div className="mt-5 grid gap-3 border-b border-stone-800 pb-6 sm:grid-cols-[1fr_auto]">
         <label className="relative block">
           <span className="sr-only">Поиск шаблонов</span>
-          <Icon name="search" className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-stone-500" />
+          <Icon
+            name="search"
+            className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-stone-500"
+          />
           <input
             type="search"
             value={query}
@@ -90,7 +112,11 @@ export function CatalogView({ category, title, items, showCategories = true }: {
             <option value="photos">Больше фото</option>
           </select>
         </label>
-        <div role="group" aria-label="Количество фото" className="flex flex-wrap items-center gap-2 sm:col-span-2">
+        <div
+          role="group"
+          aria-label="Количество фото"
+          className="flex flex-wrap items-center gap-2 sm:col-span-2"
+        >
           <span className="text-xs text-stone-500">Фото в макете:</span>
           {counts.map((n) => (
             <button
@@ -104,7 +130,11 @@ export function CatalogView({ category, title, items, showCategories = true }: {
             </button>
           ))}
           {filtered && (
-            <button type="button" onClick={reset} className="min-h-9 px-2 text-sm text-amber-300 underline-offset-2 hover:underline">
+            <button
+              type="button"
+              onClick={reset}
+              className="min-h-9 px-2 text-sm text-amber-300 underline-offset-2 hover:underline"
+            >
               Сбросить
             </button>
           )}
@@ -115,7 +145,9 @@ export function CatalogView({ category, title, items, showCategories = true }: {
         <div className="mt-10 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-700 px-6 py-14 text-center">
           <Icon name="search" className="size-8 text-stone-600" />
           <p className="font-display text-2xl">Ничего не нашлось</p>
-          <p className="max-w-sm text-sm text-stone-400">Попробуйте другое слово или уберите фильтр по количеству фото.</p>
+          <p className="max-w-sm text-sm text-stone-400">
+            Попробуйте другое слово или уберите фильтр по количеству фото.
+          </p>
           <button type="button" onClick={reset} className={ui.darkSecondary}>
             Сбросить фильтры
           </button>
