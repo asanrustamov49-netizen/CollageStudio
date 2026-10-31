@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -18,7 +17,15 @@ const links = [
   { href: "/help", label: "Помощь" },
 ];
 
-function NavLinks({ path, onNavigate, vertical = false }: { path: string; onNavigate?: () => void; vertical?: boolean }) {
+function NavLinks({
+  path,
+  onNavigate,
+  vertical = false,
+}: {
+  path: string;
+  onNavigate?: () => void;
+  vertical?: boolean;
+}) {
   return (
     <ul className={vertical ? "space-y-1" : "flex items-center gap-1"}>
       {links.map((l) => {
@@ -30,7 +37,9 @@ function NavLinks({ path, onNavigate, vertical = false }: { path: string; onNavi
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={`inline-flex min-h-10 items-center rounded-lg px-3 text-sm transition-colors ${vertical ? "w-full text-base" : ""} ${
-                active ? "bg-stone-800 text-white" : "text-stone-400 hover:text-stone-100"
+                active
+                  ? "bg-stone-800 text-white"
+                  : "text-stone-400 hover:text-stone-100"
               }`}
             >
               {l.label}
@@ -46,7 +55,6 @@ function PathNav(props: { onNavigate?: () => void; vertical?: boolean }) {
   return <NavLinks path={usePathname()} {...props} />;
 }
 
-/** Шапка публичных страниц: логотип, разделы, аккаунт; на телефоне — выпадающее меню. */
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const music = useMusic();
@@ -74,11 +82,21 @@ export function SiteHeader() {
             type="button"
             onClick={music.toggle}
             aria-pressed={music.playing}
-            aria-label={music.playing ? `Выключить музыку «${music.track.title}»` : "Включить фоновую музыку"}
-            title={music.playing ? `Играет: ${music.track.title}` : "Фоновая музыка"}
+            aria-label={
+              music.playing
+                ? `Выключить музыку «${music.track.title}»`
+                : "Включить фоновую музыку"
+            }
+            title={
+              music.playing ? `Играет: ${music.track.title}` : "Фоновая музыка"
+            }
             className={`inline-flex size-11 items-center justify-center rounded-full border transition-colors ${music.playing ? "border-amber-300/50 text-amber-300" : "border-stone-700 text-stone-300 hover:border-stone-500"}`}
           >
-            {music.playing ? <Equalizer playing bars={3} /> : <Icon name="music" className="size-[18px]" />}
+            {music.playing ? (
+              <Equalizer playing bars={3} />
+            ) : (
+              <Icon name="music" className="size-[18px]" />
+            )}
           </button>
           <div className="hidden sm:block">
             <AccountButton compact />
@@ -101,18 +119,37 @@ export function SiteHeader() {
         </div>
       </div>
       {open && (
-        <div id="site-menu" className="animate-fade border-t border-stone-800 px-4 pt-3 pb-5 lg:hidden">
-          <Suspense fallback={<NavLinks path="" vertical onNavigate={() => setOpen(false)} />}>
+        <div
+          id="site-menu"
+          className="animate-fade border-t border-stone-800 px-4 pt-3 pb-5 lg:hidden"
+        >
+          <Suspense
+            fallback={
+              <NavLinks path="" vertical onNavigate={() => setOpen(false)} />
+            }
+          >
             <PathNav vertical onNavigate={() => setOpen(false)} />
           </Suspense>
           <div className="mt-4 grid gap-2 sm:hidden">
-            <Link href="/collages" onClick={() => setOpen(false)} className={`${ui.accent} w-full`}>
+            <Link
+              href="/collages"
+              onClick={() => setOpen(false)}
+              className={`${ui.accent} w-full`}
+            >
               Создать коллаж
             </Link>
-            <Link href="/projects" onClick={() => setOpen(false)} className={`${ui.darkSecondary} w-full`}>
+            <Link
+              href="/projects"
+              onClick={() => setOpen(false)}
+              className={`${ui.darkSecondary} w-full`}
+            >
               Мои проекты
             </Link>
-            <Link href="/account" onClick={() => setOpen(false)} className={`${ui.darkSecondary} w-full`}>
+            <Link
+              href="/account"
+              onClick={() => setOpen(false)}
+              className={`${ui.darkSecondary} w-full`}
+            >
               Профиль
             </Link>
           </div>
@@ -125,20 +162,47 @@ export function SiteHeader() {
 export function SiteFooter() {
   const year = 2026;
   const columns = [
-    { title: "Платформа", items: [["/collages", "Каталог шаблонов"], ["/ideas", "Идеи и подборки"], ["/gifts", "Подарки с QR"], ["/projects", "Мои проекты"]] },
-    { title: "Помощь", items: [["/guide", "Как это работает"], ["/help", "Вопросы и ответы"], ["/privacy", "Конфиденциальность"]] },
-    { title: "Аккаунт", items: [["/login", "Войти"], ["/register", "Регистрация"], ["/favorites", "Избранное"]] },
+    {
+      title: "Платформа",
+      items: [
+        ["/collages", "Каталог шаблонов"],
+        ["/ideas", "Идеи и подборки"],
+        ["/gifts", "Подарки с QR"],
+        ["/projects", "Мои проекты"],
+      ],
+    },
+    {
+      title: "Помощь",
+      items: [
+        ["/guide", "Как это работает"],
+        ["/help", "Вопросы и ответы"],
+        ["/privacy", "Конфиденциальность"],
+      ],
+    },
+    {
+      title: "Аккаунт",
+      items: [
+        ["/login", "Войти"],
+        ["/register", "Регистрация"],
+        ["/favorites", "Избранное"],
+      ],
+    },
   ];
   return (
     <footer className="border-t border-stone-800/70 bg-[#0e0b0a] px-4 pt-12 pb-[calc(2rem+env(safe-area-inset-bottom))] text-sm md:px-8">
       <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <Logo />
-          <p className="mt-4 max-w-xs text-stone-500">Готовые фотоколлажи для печати и подарки-сюрпризы с QR-кодом. Начните без регистрации.</p>
+          <p className="mt-4 max-w-xs text-stone-500">
+            Готовые фотоколлажи для печати и подарки-сюрпризы с QR-кодом.
+            Начните без регистрации.
+          </p>
         </div>
         {columns.map((c) => (
           <div key={c.title}>
-            <p className="text-xs tracking-[0.16em] text-stone-500 uppercase">{c.title}</p>
+            <p className="text-xs tracking-[0.16em] text-stone-500 uppercase">
+              {c.title}
+            </p>
             <ul className="mt-3 space-y-2">
               {c.items.map(([href, label]) => (
                 <li key={href}>
@@ -159,7 +223,11 @@ export function SiteFooter() {
             .filter((c) => c.slug !== "all")
             .slice(0, 6)
             .map((c) => (
-              <Link key={c.slug} href={getCategoryHref(c.slug)} className="hover:text-stone-300">
+              <Link
+                key={c.slug}
+                href={getCategoryHref(c.slug)}
+                className="hover:text-stone-300"
+              >
                 {c.label}
               </Link>
             ))}
