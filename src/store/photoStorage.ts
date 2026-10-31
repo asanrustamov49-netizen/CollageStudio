@@ -1,9 +1,3 @@
-/**
- * Файлы фото пользователя в IndexedDB: хранятся как Blob, без Base64.
- * Любая операция может завершиться ошибкой (приватный режим, квота) —
- * вызывающий код должен быть готов работать без сохранения.
- */
-
 const DB_NAME = "collage-studio";
 const STORE = "photos";
 
@@ -11,7 +5,8 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openDb(): Promise<IDBDatabase> {
   dbPromise ??= new Promise<IDBDatabase>((resolve, reject) => {
-    if (typeof indexedDB === "undefined") throw new Error("IndexedDB недоступен.");
+    if (typeof indexedDB === "undefined")
+      throw new Error("IndexedDB недоступен.");
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = () => request.result.createObjectStore(STORE);
     request.onsuccess = () => resolve(request.result);
@@ -23,7 +18,10 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
-async function run<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>) {
+async function run<T>(
+  mode: IDBTransactionMode,
+  action: (store: IDBObjectStore) => IDBRequest<T>,
+) {
   const db = await openDb();
   return new Promise<T>((resolve, reject) => {
     const tx = db.transaction(STORE, mode);
@@ -43,12 +41,14 @@ export async function getPhoto(key: string): Promise<Blob | undefined> {
   return value instanceof Blob ? value : undefined;
 }
 
-/** Удаляет файлы, на которые больше не ссылается ни один сохранённый черновик. */
 export async function deletePhotosExcept(keep: Set<string>): Promise<void> {
   const keys = await run("readonly", (store) => store.getAllKeys());
-  const stale = keys.filter((key): key is string => typeof key === "string" && !keep.has(key));
-  if (stale.length) await run("readwrite", (store) => {
-    stale.forEach((key) => store.delete(key));
-    return store.count();
-  });
+  const stale = keys.filter(
+    (key): key is string => typeof key === "string" && !keep.has(key),
+  );
+  if (stale.length)
+    await run("readwrite", (store) => {
+      stale.forEach((key) => store.delete(key));
+      return store.count();
+    });
 }
