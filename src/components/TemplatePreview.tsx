@@ -1,19 +1,26 @@
 import type { HTMLAttributes, ReactNode, Ref } from "react";
-import { getFontFamily, getLayout, getTextFontSize, toCqw } from "@/data/templates";
-import type { CollageState, CollageTemplate, CollageText } from "@/types/collage";
+import {
+  getFontFamily,
+  getLayout,
+  getTextFontSize,
+  toCqw,
+} from "@/data/templates";
+import type {
+  CollageState,
+  CollageTemplate,
+  CollageText,
+} from "@/types/collage";
 import { CollagePhoto } from "./CollagePhoto";
 
-type ElementProps = HTMLAttributes<HTMLDivElement> & Record<`data-${string}`, string | boolean | undefined>;
+type ElementProps = HTMLAttributes<HTMLDivElement> &
+  Record<`data-${string}`, string | boolean | undefined>;
 
 interface TemplatePreviewProps {
   template: CollageTemplate;
   state: CollageState;
-  /** Атрибут sizes для фото, по умолчанию — под карточку каталога. */
   sizes?: string;
-  /** Фото над первым экраном: загружать сразу. */
   eager?: boolean;
   ref?: Ref<HTMLDivElement>;
-  /** Обработчики и классы ячейки в редакторе; без них превью декоративное. */
   cellProps?: (index: number) => ElementProps;
   renderCellOverlay?: (index: number) => ReactNode;
   textProps?: (text: CollageText) => ElementProps;
@@ -21,10 +28,6 @@ interface TemplatePreviewProps {
 
 const cardSizes = "(min-width: 1280px) 22vw, (min-width: 640px) 40vw, 90vw";
 
-/**
- * Коллаж: сетка раскладки с фото и тексты поверх. Эту же разметку читает экспорт,
- * поэтому всё, что видно здесь, попадает в файл.
- */
 export function TemplatePreview({
   template,
   state,
@@ -64,7 +67,9 @@ export function TemplatePreview({
             className={`relative overflow-hidden ${template.palette[i % template.palette.length]} ${className}`}
             style={{ gridArea: area, borderRadius: toCqw(style.radius) }}
           >
-            {slot?.src && <CollagePhoto slot={slot} sizes={sizes} eager={eager} />}
+            {slot?.src && (
+              <CollagePhoto slot={slot} sizes={sizes} eager={eager} />
+            )}
             {renderCellOverlay?.(i)}
           </div>
         );
