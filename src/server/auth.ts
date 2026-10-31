@@ -1,9 +1,18 @@
-import { createHash, randomBytes, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
+import {
+  createHash,
+  randomBytes,
+  scrypt as scryptCb,
+  timingSafeEqual,
+} from "node:crypto";
 import { promisify } from "node:util";
 import { cookies } from "next/headers";
 import { read, write, type User } from "./db";
 
-const scrypt = promisify(scryptCb) as (password: string, salt: string, keylen: number) => Promise<Buffer>;
+const scrypt = promisify(scryptCb) as (
+  password: string,
+  salt: string,
+  keylen: number,
+) => Promise<Buffer>;
 
 export const SESSION_COOKIE = "cs_session";
 const SESSION_DAYS = 30;
@@ -15,13 +24,17 @@ export interface PublicUser {
   createdAt: number;
 }
 
-export const publicUser = ({ id, name, email, createdAt }: User): PublicUser => ({ id, name, email, createdAt });
+export const publicUser = ({
+  id,
+  name,
+  email,
+  createdAt,
+}: User): PublicUser => ({ id, name, email, createdAt });
 
 export function newId(bytes = 12) {
   return randomBytes(bytes).toString("base64url");
 }
 
-/** Пароль хранится только как scrypt-хеш с солью: `соль:хеш`. */
 export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const hash = await scrypt(password, salt, 64);
@@ -36,9 +49,9 @@ export async function verifyPassword(password: string, stored: string) {
   return timingSafeEqual(actual, expected);
 }
 
-const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
+const hashToken = (token: string) =>
+  createHash("sha256").update(token).digest("hex");
 
-/** Создаёт сессию и ставит httpOnly-cookie. В базе лежит только хеш токена. */
 export async function startSession(userId: string) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = Date.now() + SESSION_DAYS * 86_400_000;
@@ -49,7 +62,9 @@ export async function startSession(userId: string) {
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production" && process.env.INSECURE_COOKIES !== "1",
+    secure:
+      process.env.NODE_ENV === "production" &&
+      process.env.INSECURE_COOKIES !== "1",
     path: "/",
     expires: new Date(expiresAt),
   });
@@ -67,22 +82,22 @@ export async function endSession() {
   jar.delete(SESSION_COOKIE);
 }
 
-/** Текущий пользователь по cookie сессии или null. */
 export async function currentUser(): Promise<User | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const tokenHash = hashToken(token);
   return read((db) => {
-    const session = db.sessions.find((s) => s.tokenHash === tokenHash && s.expiresAt > Date.now());
-    return session ? (db.users.find((u) => u.id === session.userId) ?? null) : null;
+    const session = db.sessions.find(
+      (s) => s.tokenHash === tokenHash && s.expiresAt > Date.now(),
+    );
+    return session
+      ? (db.users.find((u) => u.id === session.userId) ?? null)
+      : null;
   });
 }
 
-// --- Ограничение частоты попыток входа --------------------------------------
-
 const attempts = new Map<string, { count: number; resetAt: number }>();
 
-/** false — лимит исчерпан. Хранится в памяти процесса. */
 export function allowAttempt(key: string, limit = 10, windowMs = 60_000) {
   const now = Date.now();
   const entry = attempts.get(key);
