@@ -1,17 +1,14 @@
 export type ExportFormat = "png" | "jpg" | "pdf";
-
 export const exportSizes = [
   { width: 1600, label: "Для экрана", hint: "1600 px" },
   { width: 2400, label: "Высокое", hint: "2400 px" },
   { width: 3600, label: "Для печати", hint: "3600 px ≈ 30 см при 300 dpi" },
 ];
 
-/**
- * Рисует коллаж на canvas по раскладке DOM-элементов внутри `root`:
- * ячейки помечены `data-cell`, фото — `data-photo` с исходным файлом
- * и кадром в `data-src`/`data-x`/`data-y`/`data-zoom`, тексты — `data-text`.
- */
-export async function renderCollage(root: HTMLElement, outputWidth: number): Promise<HTMLCanvasElement> {
+export async function renderCollage(
+  root: HTMLElement,
+  outputWidth: number,
+): Promise<HTMLCanvasElement> {
   await document.fonts.ready;
 
   if (!root.clientWidth || !root.clientHeight) {
@@ -57,13 +54,15 @@ export async function renderCollage(root: HTMLElement, outputWidth: number): Pro
     if (photo) {
       const img = await loadImage(photo.dataset.src ?? photo.currentSrc);
       if (!img) {
-        throw new Error(`Не удалось загрузить фото ${i + 1}. Замените или удалите его.`);
+        throw new Error(
+          `Не удалось загрузить фото ${i + 1}. Замените или удалите его.`,
+        );
       }
-      // Аналог object-fit: cover + object-position и scale(zoom) с transform-origin в той же точке.
       const px = Number(photo.dataset.x ?? 50) / 100;
       const py = Number(photo.dataset.y ?? 50) / 100;
       const zoom = Number(photo.dataset.zoom ?? 1);
-      const ratio = Math.max(w / img.naturalWidth, h / img.naturalHeight) * zoom;
+      const ratio =
+        Math.max(w / img.naturalWidth, h / img.naturalHeight) * zoom;
       const dw = img.naturalWidth * ratio;
       const dh = img.naturalHeight * ratio;
       ctx.drawImage(img, x + (w - dw) * px, y + (h - dh) * py, dw, dh);
@@ -84,41 +83,65 @@ export async function renderCollage(root: HTMLElement, outputWidth: number): Pro
     const padX = parseFloat(style.paddingLeft) * scale;
     const padY = parseFloat(style.paddingTop) * scale;
     const fontSize = parseFloat(style.fontSize) * scale;
-    const lineHeight = (parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.25) * scale;
+    const lineHeight =
+      (parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.25) *
+      scale;
     ctx.font = `${style.fontStyle} ${style.fontWeight} ${fontSize}px ${style.fontFamily}`;
     ctx.fillStyle = style.color;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const maxWidth = w - padX * 2;
     wrapText(ctx, text, maxWidth).forEach((line, n) => {
-      ctx.fillText(line, x + w / 2, y + padY + lineHeight * (n + 0.5), maxWidth);
+      ctx.fillText(
+        line,
+        x + w / 2,
+        y + padY + lineHeight * (n + 0.5),
+        maxWidth,
+      );
     });
   }
 
   return canvas;
 }
 
-export async function exportCollage(root: HTMLElement, format: ExportFormat, outputWidth: number): Promise<Blob> {
+export async function exportCollage(
+  root: HTMLElement,
+  format: ExportFormat,
+  outputWidth: number,
+): Promise<Blob> {
   const canvas = await renderCollage(root, outputWidth);
   if (format === "png") return toBlob(canvas, "image/png");
   const jpeg = await toBlob(canvas, "image/jpeg", 0.92);
   if (format === "jpg") return jpeg;
-  return jpegToPdf(new Uint8Array(await jpeg.arrayBuffer()), canvas.width, canvas.height);
+  return jpegToPdf(
+    new Uint8Array(await jpeg.arrayBuffer()),
+    canvas.width,
+    canvas.height,
+  );
 }
 
-function toBlob(canvas: HTMLCanvasElement, type: string, quality?: number): Promise<Blob> {
+function toBlob(
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality?: number,
+): Promise<Blob> {
   return new Promise((resolve, reject) =>
     canvas.toBlob(
-      (blob) => (blob?.size ? resolve(blob) : reject(new Error("Не удалось создать файл."))),
+      (blob) =>
+        blob?.size
+          ? resolve(blob)
+          : reject(new Error("Не удалось создать файл.")),
       type,
       quality,
     ),
   );
 }
 
-/** Переносит текст по словам, как CSS `white-space: pre-wrap; overflow-wrap: break-word`. */
-function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  // Допуск на субпиксельные расхождения измерений Canvas и CSS.
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): string[] {
   const limit = maxWidth * 1.01;
   const lines: string[] = [];
   for (const paragraph of text.split("\n")) {
@@ -131,10 +154,10 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
         lines.push(line.trimEnd());
         line = word.trimStart();
       }
-      // Слово длиннее строки режется по символам.
       while (ctx.measureText(line).width > limit && line.length > 1) {
         let cut = line.length - 1;
-        while (cut > 1 && ctx.measureText(line.slice(0, cut)).width > limit) cut--;
+        while (cut > 1 && ctx.measureText(line.slice(0, cut)).width > limit)
+          cut--;
         lines.push(line.slice(0, cut));
         line = line.slice(cut);
       }
@@ -144,7 +167,6 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   return lines;
 }
 
-/** Загружает исходный файл фото; null, если его не удалось декодировать. */
 async function loadImage(src: string): Promise<HTMLImageElement | null> {
   const img = new Image();
   img.src = src;
@@ -156,7 +178,6 @@ async function loadImage(src: string): Promise<HTMLImageElement | null> {
   }
 }
 
-/** Одностраничный PDF, страница по пропорциям коллажа (длинная сторона — A4, 842 pt). */
 function jpegToPdf(jpeg: Uint8Array, width: number, height: number): Blob {
   const k = 842 / Math.max(width, height);
   const pw = +(width * k).toFixed(2);
@@ -181,7 +202,10 @@ function jpegToPdf(jpeg: Uint8Array, width: number, height: number): Blob {
   push("%PDF-1.4\n");
   object(1, "<< /Type /Catalog /Pages 2 0 R >>");
   object(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
-  object(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`);
+  object(
+    3,
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`,
+  );
   object(4, [
     `<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`,
     jpeg,
@@ -189,7 +213,12 @@ function jpegToPdf(jpeg: Uint8Array, width: number, height: number): Blob {
   ]);
   object(5, `<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   const xref = length;
-  push(`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("")}`);
+  push(
+    `xref\n0 6\n0000000000 65535 f \n${offsets
+      .slice(1)
+      .map((o) => `${String(o).padStart(10, "0")} 00000 n \n`)
+      .join("")}`,
+  );
   push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
   return new Blob(parts as BlobPart[], { type: "application/pdf" });
 }
