@@ -1,16 +1,13 @@
 "use client";
-
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { useAccount } from "@/store/account";
 
-/** Запускает проверку сессии и синхронизацию на любой странице. */
 export function AccountBootstrap() {
   useAccount();
   return null;
 }
 
-/** Кнопка аккаунта в шапке: «Войти» или инициал с именем. */
 export function AccountButton({ compact = false }: { compact?: boolean }) {
   const account = useAccount();
   if (account.status === "loading") return <span className="inline-block h-11 w-24 animate-pulse rounded-full bg-stone-800" aria-hidden />;
