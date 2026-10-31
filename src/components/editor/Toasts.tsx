@@ -1,5 +1,4 @@
 "use client";
-
 import { useCallback, useState } from "react";
 
 type ToastKind = "success" | "error";
@@ -18,7 +17,10 @@ export function useToasts() {
   const notify = useCallback((message: string, kind: ToastKind = "success") => {
     const id = ++nextId;
     setToasts((list) => [...list.slice(-2), { id, kind, message }]);
-    setTimeout(() => setToasts((list) => list.filter((t) => t.id !== id)), kind === "error" ? 6000 : 3000);
+    setTimeout(
+      () => setToasts((list) => list.filter((t) => t.id !== id)),
+      kind === "error" ? 6000 : 3000,
+    );
   }, []);
 
   return { toasts, notify };
@@ -35,7 +37,9 @@ export function ToastList({ toasts }: { toasts: Toast[] }) {
         <p
           key={t.id}
           className={`max-w-md rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg ${
-            t.kind === "error" ? "bg-red-600 text-white" : "bg-neutral-900 text-white"
+            t.kind === "error"
+              ? "bg-red-600 text-white"
+              : "bg-neutral-900 text-white"
           }`}
         >
           {t.kind === "success" ? "✓ " : "⚠ "}

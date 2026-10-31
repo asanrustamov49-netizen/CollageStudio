@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef, type ReactNode } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { ui } from "@/components/ui/styles";
@@ -12,7 +11,6 @@ interface ModalProps {
   wide?: boolean;
 }
 
-/** Диалог на <dialog>: Esc, клик по фону и кнопка закрытия. На телефоне — шторка снизу. */
 export function Modal({ title, onClose, children, footer, wide }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -48,5 +46,4 @@ export function Modal({ title, onClose, children, footer, wide }: ModalProps) {
   );
 }
 
-/** Совместимость: прежние имена стилей кнопок. */
 export const buttonStyles = { primary: ui.primary, secondary: ui.secondary, danger: `${ui.danger} mr-auto` };
