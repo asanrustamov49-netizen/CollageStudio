@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { templates } from "@/data/templates";
 import { useFavorites } from "@/store/favorites";
@@ -10,7 +9,9 @@ import { ui } from "./ui/styles";
 
 export function FavoritesView() {
   const favorites = useFavorites();
-  const items = favorites ? templates.filter((t) => favorites.includes(t.id)) : null;
+  const items = favorites
+    ? templates.filter((t) => favorites.includes(t.id))
+    : null;
 
   return (
     <div className="flex flex-1 flex-col bg-stone-950 text-stone-100">
@@ -25,7 +26,10 @@ export function FavoritesView() {
               <Icon name="heart" className="size-7" />
             </span>
             <h1 className="font-display text-3xl">В избранном пусто</h1>
-            <p className="max-w-sm text-sm text-stone-400">Нажмите на сердечко у шаблона — он появится здесь, чтобы вернуться к нему позже.</p>
+            <p className="max-w-sm text-sm text-stone-400">
+              Нажмите на сердечко у шаблона — он появится здесь, чтобы вернуться
+              к нему позже.
+            </p>
             <Link href="/collages" className={ui.accent}>
               Открыть каталог
             </Link>
@@ -33,7 +37,12 @@ export function FavoritesView() {
           <PopularTemplates />
         </main>
       ) : (
-        <CatalogView category="all" title="Избранное" items={items} showCategories={false} />
+        <CatalogView
+          category="all"
+          title="Избранное"
+          items={items}
+          showCategories={false}
+        />
       )}
     </div>
   );
