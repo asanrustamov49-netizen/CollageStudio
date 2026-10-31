@@ -1,19 +1,28 @@
 "use client";
-
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { createAmbientMusic, TRACKS, type AmbientMusic, type TrackId } from "./ambientMusic";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  createAmbientMusic,
+  TRACKS,
+  type AmbientMusic,
+  type TrackId,
+} from "./ambientMusic";
 
 interface MusicApi {
   playing: boolean;
-  /** Музыка недоступна на этой странице (редактор). */
   disabled: boolean;
   track: (typeof TRACKS)[number];
   volume: number;
   error: string | null;
   toggle: () => Promise<void>;
   selectTrack: (id: TrackId) => Promise<void>;
-  /** Выбирает настроение и сразу включает его (по нажатию пользователя). */
   playTrack: (id: TrackId) => Promise<void>;
   setVolume: (volume: number) => void;
 }
@@ -21,11 +30,6 @@ interface MusicApi {
 const MusicContext = createContext<MusicApi | null>(null);
 const DisableContext = createContext<(disabled: boolean) => void>(() => {});
 
-/**
- * Один плеер на всё приложение: музыка не прерывается при переходе между
- * начальным экраном и каталогом и выключается в редакторе. Звук включается
- * только по действию пользователя.
- */
 export function MusicProvider({ children }: { children: ReactNode }) {
   const musicRef = useRef<AmbientMusic | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -34,7 +38,6 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [disabled, setDisabled] = useState(false);
 
-  // В редакторе музыка не нужна: состояние сбрасывается сразу при переходе.
   if (disabled && playing) setPlaying(false);
 
   useEffect(() => {
@@ -93,10 +96,6 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Выключает музыку в редакторе. Читает адрес страницы, поэтому рендерится
- * внутри <Suspense> отдельно от провайдера.
- */
 export function MusicRouteGuard() {
   const pathname = usePathname();
   const setDisabled = useContext(DisableContext);
@@ -108,19 +107,30 @@ export function MusicRouteGuard() {
 
 export function useMusic(): MusicApi {
   const api = useContext(MusicContext);
-  if (!api) throw new Error("useMusic должен использоваться внутри MusicProvider.");
+  if (!api)
+    throw new Error("useMusic должен использоваться внутри MusicProvider.");
   return api;
 }
 
-/** Анимированный эквалайзер: двигается, пока играет музыка. */
-export function Equalizer({ playing, bars = 5, className = "" }: { playing: boolean; bars?: number; className?: string }) {
+export function Equalizer({
+  playing,
+  bars = 5,
+  className = "",
+}: {
+  playing: boolean;
+  bars?: number;
+  className?: string;
+}) {
   return (
     <span aria-hidden className={`flex h-4 items-end gap-0.5 ${className}`}>
       {Array.from({ length: bars }, (_, i) => (
         <span
           key={i}
           className={`h-full w-[3px] origin-bottom rounded-full bg-current ${playing ? "animate-eq" : "scale-y-[0.2]"}`}
-          style={{ animationDelay: `${-i * 170}ms`, animationDuration: `${700 + (i % 3) * 180}ms` }}
+          style={{
+            animationDelay: `${-i * 170}ms`,
+            animationDuration: `${700 + (i % 3) * 180}ms`,
+          }}
         />
       ))}
     </span>
